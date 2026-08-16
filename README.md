@@ -1,164 +1,133 @@
-# 保險推薦 Agent
+# Insurance Recommendation Agent (English README)
 
+> Portfolio adaptation: This fork preserves the original production-style architecture and broadens the insurance demo to include modern, digital-first recommendation flows for home, auto, and pet insurance. It keeps the Google ADK → MCP Toolbox → SQL/RAG → FastAPI design while adding UI and evaluation improvements for a portfolio demo.
 
-> **Portfolio adaptation:** This fork keeps the original production architecture intact and broadens the insurance domain to include digital-first **home, car, and pet insurance** recommendation flows. The goal is to better represent a modern insurtech product portfolio while preserving the existing Google ADK → MCP Toolbox → SQL/RAG → FastAPI/Cloud Run design.
+This repository provides a working example of an insurance recommendation AI Agent built on top of Google ADK. The system integrates FastAPI, Next.js, MCP Toolbox (controlled tools), PostgreSQL with pgvector, and Geminic/Vertex AI models. It demonstrates product search, FAQ semantic retrieval, session-aware memory, audit logging, PII protection, and optional multimodal live interactions.
 
-這是一個以 Google ADK 為核心的保險推薦 Agent 範例專案。系統整合 FastAPI、Next.js、MCP Toolbox、PostgreSQL/pgvector 與 Gemini/Vertex AI，示範如何建立具備產品查詢、FAQ 語意搜尋、會話記憶、稽核紀錄、PII 保護，以及即時語音/影像互動能力的 AI Agent。
+Primary goals of this README:
 
-👉 **線上展示專案：[https://lastingyeh.github.io/adk-insurance-recommendation-agent/](https://lastingyeh.github.io/adk-insurance-recommendation-agent/)**
+1. Explain what the project does and the problems it solves.
+2. Show how to run the system locally (quickstart).
+3. Point to documentation for testing, evaluation, and deployment.
 
-這份 README 的目標是讓使用者快速完成三件事：
+## Key Features
 
-1. 了解這個專案解決什麼問題。
-2. 在本機把系統跑起來。
-3. 知道要深入架構、測試或部署時該看哪些文件。
+- Google ADK based Agent: understands user needs, asks clarifying questions, queries tools, and produces recommendation responses.
+- MCP Toolbox: controlled SQL tools for querying products, recommendation rules, and FAQ knowledge.
+- FastAPI backend: REST endpoints, SSE streaming for agent responses, and WebSocket support for live/multimodal sessions.
+- Next.js frontend: customer-facing recommendation UI, live mode, and agent state visualization.
+- PostgreSQL + pgvector: stores products, recommendation rules, FAQ embeddings, sessions, and audit logs.
+- Multimodal Live Agent: optional real-time voice/video and interactive session support via WebSocket.
+- Security & compliance: JWT authentication, PII redaction, public-state filtering, and audit hash chains to support traceability.
+- Evaluation-driven development: ADK evalsets verify recommendation quality, safety, and session-aware behavior.
+- Cloud-ready deployment: Docker Compose examples plus Cloud Run / Terraform configuration for dev/staging/prod.
 
-## 核心功能
+## System Architecture
 
-- Google ADK Agent：理解保險需求、主動追問、查詢產品並產生推薦回覆。
-- MCP Toolbox：透過受控 SQL 工具查詢保險產品、推薦規則與 FAQ 知識庫。
-- FastAPI 後端：提供 REST API、SSE 串流回覆與 WebSocket 即時互動。
-- Next.js 前端：提供保險推薦對話介面、Live mode 與 Agent 狀態視覺化。
-- PostgreSQL + pgvector：儲存產品、FAQ、Session、Audit Log 與向量資料。
-- Multimodal Live Agent：支援即時語音、畫面與互動式對話。
-- 安全與合規設計：包含 JWT 驗證、PII redaction、public state filtering 與 audit hash chain。
-- 評估驅動開發：使用 ADK evalsets 驗證推薦品質、安全性、session-aware 行為與 Live mode。
-- 雲端部署準備：提供 Docker Compose、Cloud Run 與 Terraform dev/staging/prod 部署入口。
+![System Architecture](docs/images/archi-v2.png)
 
-## 系統架構
-
-![系統架構](docs/images/archi-v2.png)
-
-```text
-Frontend (Next.js)
+```
+Browser / Next.js
     |
     | REST / SSE / WebSocket
     v
 FastAPI Backend
     |
     +-- Google ADK Runner
-    |       |
-    |       +-- Insurance Agent
-    |       +-- Session tools
-    |       +-- MCP Toolbox tools
+    |      +-- Insurance Agent
+    |      +-- Session tools
+    |      +-- MCP Toolbox tools
     |
-    +-- Session Service
-    +-- User Service
-    +-- Audit Log Service
-    +-- Live Agent Service
+    +-- Services: Session, User, Audit Log, Live Agent
     |
     v
-PostgreSQL / pgvector
-    |
-    +-- Insurance products
-    +-- Recommendation rules
-    +-- FAQ knowledge
-    +-- Session state
-    +-- Audit logs
+PostgreSQL + pgvector (products, rules, FAQ embeddings, sessions, audits)
 ```
 
-![功能設計](docs/images/features.png)
+![Features Diagram](docs/images/features.png)
 
-## 技術組成
+## Technology Stack
 
-| 類別             | 技術                                 |
-| ---------------- | ------------------------------------ |
-| Agent 框架       | Google ADK                           |
-| LLM / 多模態模型 | Gemini / Vertex AI                   |
-| 後端 API         | FastAPI, Uvicorn                     |
-| 前端             | Next.js 15, React 19, NextAuth.js    |
-| 資料庫           | PostgreSQL, pgvector                 |
-| 工具層           | MCP Toolbox for Databases            |
-| 驗證             | JWT, NextAuth                        |
-| 基礎設施         | Docker Compose, Cloud Run, Terraform |
-| 測試與評估       | pytest, ADK eval, Locust             |
-| 套件管理         | uv, npm                              |
+| Area                | Technology                                  |
+|---------------------|---------------------------------------------|
+| Agent framework     | Google ADK                                  |
+| Models              | Gemini / Vertex AI                           |
+| Backend API         | FastAPI, Uvicorn                             |
+| Frontend            | Next.js 15, React 19, NextAuth.js            |
+| Database            | PostgreSQL, pgvector                         |
+| Tooling             | MCP Toolbox (controlled DB tools)           |
+| Auth                | JWT, NextAuth                                |
+| Infra               | Docker Compose, Cloud Run, Terraform         |
+| Testing & Eval      | pytest, ADK eval, Locust                     |
 
-## 專案目錄
+## Repository Layout
 
-```text
+```
 .
-├── app/                         # 後端 Agent 與 FastAPI 應用程式
-│   ├── api/                     # REST、SSE、WebSocket 路由與資料格式
-│   ├── app_utils/               # Telemetry 與部署輔助工具
-│   ├── prompts/                 # Agent system prompt
-│   ├── security/                # 驗證、PII 保護與 public state filtering
-│   ├── services/                # Agent 執行、Live mode、Session、User 與 Audit Log 服務
-│   ├── streaming/               # WebSocket upstream/downstream 處理
-│   ├── tools/                   # ADK session tools
-│   ├── agent.py                 # Agent factory 與 ADK app 註冊
-│   ├── config.py                # 執行時設定
-│   └── container.py             # Dependency container
-├── db/                          # 資料庫 schema、seed data 與 MCP Toolbox 設定
-├── deployment/                  # Terraform 與部署文件
-├── docs/                        # 架構與功能文件
-├── frontend/                    # Next.js 前端應用程式
-├── scripts/                     # 設定、資料建立與 FAQ ingestion 腳本
-├── tests/                       # Unit、integration、security、API、load 與 eval 測試｀
-├── docker-compose.yml           # 本機容器編排
-├── Dockerfile.backend           # 後端容器映像設定
-├── Dockerfile.toolbox           # Toolbox 容器映像設定
-├── Makefile                     # 主要開發指令入口
-├── pyproject.toml               # Python 專案設定與依賴
-└── .env.example                 # 環境變數範本
+├── app/               # Backend agent, FastAPI app, tools and services
+├── db/                # Schema, seeds, and MCP Toolbox tool definitions
+├── frontend/          # Next.js application and UI components
+├── docs/              # Architecture and design docs
+├── deployment/        # Terraform and deployment manifests
+├── scripts/           # Setup, ingestion and helper scripts
+├── tests/             # Unit, integration, eval and load tests
+├── docker-compose.yml
+├── Makefile
+├── pyproject.toml
+└── .env.example
 ```
 
-## 前置需求
+## Prerequisites
 
-本專案本機開發需準備以下工具、套件與環境。詳細 macOS 本機安裝與核准檢核，請參閱完整的 [環境安裝與核准檢查清單 (setup-env.md)](docs/setup/setup-env.md)。
+Local development requires:
 
-### 📋 必備工具與套件 (Required Tools & Dependencies)
 - Python 3.12
-- uv
-- Node.js 20 或更新版本
-- npm
-- Docker 與 Docker Compose
-- Google Cloud credentials：使用 Vertex AI、embedding、雲端部署或 Toolbox 語意搜尋時需要
+- Node.js 20+ and npm
+- Docker & Docker Compose (for the full local demo)
+- Google Cloud credentials when using Vertex AI, embeddings, or cloud Toolbox
 
-
-先建立本機環境設定檔：
+Copy the environment template and update values before running:
 
 ```bash
 cp .env.example .env
+# Edit .env to add credentials and overrides
 ```
 
-接著依照你的環境修改 `.env`。
+## Quick Start
 
-## 快速開始
+There are two main ways to run the project locally: the full Docker Compose demo (recommended for a complete environment), or running services independently for development.
 
-### 方式一：使用 Docker Compose 啟動
+### Option A — Full demo with Docker Compose
 
-如果你想一次啟動資料庫、Toolbox、後端與前端，建議使用這個方式。
+This brings up PostgreSQL, Toolbox, backend, and frontend together:
 
 ```bash
 cp .env.example .env
+# Fill required credentials in .env
 make up-build
 ```
 
-啟動後可開啟：
+Open in your browser:
 
-```text
-前端介面：http://localhost:3000
-後端 API：http://localhost:8080
-健康檢查：http://localhost:8080/healthz
-就緒檢查：http://localhost:8080/readyz
-```
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8080
+- Health check: http://localhost:8080/healthz
 
-停止服務：
+Stop services:
 
 ```bash
 make down
 ```
 
-查看服務紀錄：
+View logs:
 
 ```bash
 make logs
 ```
 
-### 方式二：分開啟動服務
+### Option B — Run services separately (development)
 
-如果你正在開發後端或前端，建議用這個方式。
+Install dependencies and start database and toolbox when you only develop one component:
 
 ```bash
 cp .env.example .env
@@ -168,100 +137,85 @@ make db-seed
 make db-ingest
 ```
 
-啟動後端：
+Start backend:
 
 ```bash
 make run-fastapi
 ```
 
-在另一個終端機啟動前端：
+In another terminal, start the frontend:
 
 ```bash
 make ui-install
 make ui-dev
 ```
 
-開啟：
+Then access the UI at http://localhost:3000 and the API at http://localhost:8080.
 
-```text
-前端介面：http://localhost:3000
-後端 API：http://localhost:8080
-```
+## Environment Variables
 
-## 環境變數
+The application reads configuration from environment variables. Use `.env.example` as a template. Key variables include:
 
-應用程式會從環境變數讀取執行設定。請以 `.env.example` 為範本。
+| Variable                      | Purpose / Notes |
+|-------------------------------|-----------------|
+| GOOGLE_GENAI_USE_VERTEXAI     | Set `1` to use Vertex AI. |
+| GOOGLE_CLOUD_PROJECT          | Google Cloud project id. |
+| GOOGLE_CLOUD_LOCATION         | Google Cloud region, e.g. `us-central1`. |
+| GOOGLE_API_KEY                | GenAI API key for local API-key usage. |
+| GOOGLE_APPLICATION_CREDENTIALS| Path to service account JSON for Vertex AI. |
+| ADK_APP_NAME                  | ADK app name (default: `app`). |
+| DATABASE_URL                  | Main database URL (used by services). |
+| ADK_SESSION_DB_URI            | Session DB URL for ADK session store. |
+| ADK_MEMORY_MODE               | Set `in_memory` to use non-persistent sessions. |
+| MODEL_NAME                    | Default text model, e.g. `gemini-2.5-flash`. |
+| LIVE_MODEL_NAME               | Multimodal model used by Live mode. |
+| TOOLBOX_SERVER_URL            | MCP Toolbox server base URL. |
+| JWT_SECRET                    | Backend JWT signing secret (use strong secret in prod). |
+| NEXTAUTH_SECRET               | Frontend NextAuth secret (use strong secret in prod). |
+| AUDIT_LOG_ENABLED             | Set `1` to enable audit logging. |
+| AUDIT_DB_PATH                 | Audit log DB URL. |
+| AUDIT_HASH_SALT               | Salt used for audit hashing. |
+| PII_REDACTION_ENABLED         | Set `1` to enable PII redaction. |
+| ENABLE_CLOUD_TRACING          | Enable Cloud Trace export. |
+| ENABLE_CLOUD_LOGGING          | Enable Cloud Logging export. |
 
-| 變數                             | 用途                                                      |
-| -------------------------------- | --------------------------------------------------------- |
-| `GOOGLE_GENAI_USE_VERTEXAI`      | 設為 `1` 時使用 Vertex AI。                               |
-| `GOOGLE_CLOUD_PROJECT`           | Google Cloud project ID。                                 |
-| `GOOGLE_CLOUD_LOCATION`          | Google Cloud region，例如 `us-central1`。                 |
-| `GOOGLE_API_KEY`                 | 本機使用 API key 模式時的 Google GenAI API key。          |
-| `GOOGLE_APPLICATION_CREDENTIALS` | 需要 service account 時使用的憑證檔案路徑。               |
-| `ADK_APP_NAME`                   | ADK application name，預設為 `app`。                      |
-| `DATABASE_URL`                   | 容器或部署環境使用的主要資料庫 URL。                      |
-| `ADK_SESSION_DB_URI`             | ADK Session service 使用的資料庫 URL。                    |
-| `ADK_MEMORY_MODE`                | 設為 `in_memory` 可使用非持久化 session；預設使用資料庫。 |
-| `MODEL_NAME`                     | 文字推薦模型，預設為 `gemini-2.5-flash`。                 |
-| `LIVE_MODEL_NAME`                | WebSocket Live mode 使用的多模態模型。                    |
-| `TOOLBOX_SERVER_URL`             | MCP Toolbox server URL。                                  |
-| `JWT_SECRET`                     | 後端 JWT signing secret；正式環境請使用高強度值。         |
-| `NEXTAUTH_SECRET`                | 前端 NextAuth secret；正式環境請使用高強度值。            |
-| `AUDIT_LOG_ENABLED`              | 設為 `1` 時啟用 audit logging。                           |
-| `AUDIT_DB_PATH`                  | Audit log 使用的資料庫 URL。                              |
-| `AUDIT_HASH_SALT`                | Audit hash chain 與敏感資料雜湊使用的 salt。              |
-| `PII_REDACTION_ENABLED`          | 設為 `1` 時啟用 PII redaction。                           |
-| `ENABLE_CLOUD_TRACING`           | 啟用後將 trace 傳送到 Google Cloud Trace。                |
-| `ENABLE_CLOUD_LOGGING`           | 啟用後將 log 傳送到 Google Cloud Logging。                |
-| `BQ_ANALYTICS_DATASET`           | 設定後啟用 BigQuery Agent Analytics plugin。              |
+## Common Development Commands
 
-## 常用開發指令
+Most development tasks are available via the repository Makefile:
 
-大部分常見工作都可以透過 Makefile 執行。
+| Command | Description |
+|---------|-------------|
+| `make help` | Show available make targets. |
+| `make install` | Create a Python 3.12 venv and install core dependencies. |
+| `make install-all` | Install core, dev, eval and GCP deps. |
+| `make db-up` | Start local PostgreSQL and MCP Toolbox containers. |
+| `make db-setup` | Setup DB, create test users and import FAQ embeddings. |
+| `make run-fastapi` | Run the backend on port 8080. |
+| `make ui-install` | Install frontend dependencies. |
+| `make ui-dev` | Run Next.js dev server on port 3000. |
+| `make up` | Start all services with Docker Compose. |
+| `make up-build` | Rebuild images and start all services. |
+| `make down` | Stop Docker Compose services. |
+| `make logs` | Follow Docker Compose logs. |
+| `make clean` | Clear Python and pytest caches. |
 
-| 指令               | 說明                                                  |
-| ------------------ | ----------------------------------------------------- |
-| `make help`        | 顯示可用指令。                                        |
-| `make install`     | 建立 Python 3.12 virtual environment 並安裝核心依賴。 |
-| `make install-all` | 安裝核心、dev、eval 與 GCP 依賴。                     |
-| `make sync`        | 同步 Python 依賴。                                    |
-| `make env-check`   | 檢查本機工具與環境設定。                              |
-| `make db-up`       | 啟動本機 PostgreSQL 與 MCP Toolbox 容器。             |
-| `make db-setup`    | 啟動資料庫、建立測試使用者並匯入 FAQ embeddings。     |
-| `make run-fastapi` | 在 port 8080 啟動 FastAPI 後端。                      |
-| `make ui-install`  | 安裝前端依賴。                                        |
-| `make ui-dev`      | 在 port 3000 啟動 Next.js 前端。                      |
-| `make up`          | 啟動所有 Docker Compose 服務。                        |
-| `make up-build`    | 重新建置並啟動所有 Docker Compose 服務。              |
-| `make down`        | 停止 Docker Compose 服務。                            |
-| `make logs`        | 追蹤 Docker Compose logs。                            |
-| `make clean`       | 清除 Python cache 與 pytest cache。                   |
-| `make clean-all`   | 清除產生的 cache 與本機 virtual environment。         |
+## API Overview
 
-## API 概覽
+The backend exposes health, auth, session management, agent run (SSE streaming), and live WebSocket endpoints. Examples:
 
-後端提供健康檢查、驗證、Session 管理、Agent SSE 串流與 Live Agent WebSocket API。
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET | `/healthz` | Basic health check. |
+| GET | `/readyz` | Readiness checks for DB, Toolbox, etc. |
+| POST | `/auth/token` | Obtain JWT access token. |
+| POST | `/api/agent/run` | Run an agent request; returns SSE-streamed responses. |
+| WS | `/api/agent/live/ws/{session_id}` | Start a multimodal live session via WebSocket. |
 
-| 方法     | 路徑                                                     | 用途                                         |
-| -------- | -------------------------------------------------------- | -------------------------------------------- |
-| `GET`    | `/healthz`                                               | 基本健康檢查。                               |
-| `GET`    | `/readyz`                                                | 檢查 Session store、Toolbox 等依賴是否就緒。 |
-| `POST`   | `/auth/token`                                            | 登入並取得 JWT access token。                |
-| `POST`   | `/api/agent/run`                                         | 執行 Agent，並透過 SSE 回傳串流結果。        |
-| `GET`    | `/apps/{app_name}/users/{user_id}/sessions`              | 列出使用者 sessions。                        |
-| `POST`   | `/apps/{app_name}/users/{user_id}/sessions`              | 建立或初始化 session。                       |
-| `GET`    | `/apps/{app_name}/users/{user_id}/sessions/{session_id}` | 取得指定 session。                           |
-| `DELETE` | `/apps/{app_name}/users/{user_id}/sessions/{session_id}` | 刪除指定 session。                           |
-| `WS`     | `/api/agent/live/ws/{session_id}`                        | 啟動多模態 Live Agent session。              |
+All user/session/agent endpoints require authentication. The frontend gets a token from `/auth/token` and forwards it on subsequent requests.
 
-使用者、Session 與 Agent endpoint 都需要驗證。前端會透過 `/auth/token` 取得 token，並在後續請求中轉送給後端。
+## Frontend
 
-## 前端
-
-前端位於 `frontend/`，使用 Next.js 與 NextAuth。
-
-常用指令：
+The frontend app lives in `frontend/` and is built with Next.js and NextAuth. Typical commands:
 
 ```bash
 make ui-install
@@ -269,74 +223,56 @@ make ui-dev
 make ui-build
 ```
 
-重要目錄：
+Important directories:
 
-- `frontend/app/`：頁面路由與 API proxy routes。
-- `frontend/components/`：主要 UI 元件，包含 user mode、workbench、waveform、state tree 與 timeline views。
-- `frontend/hooks/`：audio、camera、screen capture 與 Live Agent hooks。
-- `frontend/lib/`：proxy、markdown、mock data、session storage 與 auth recovery helpers。
+- `frontend/app/` — page routes and API proxy routes
+- `frontend/components/` — UI components and views
+- `frontend/hooks/` — audio/camera/screen capture and Live Agent hooks
+- `frontend/lib/` — proxy, markdown helpers, mock data and session helpers
 
-## 資料庫與 MCP Toolbox
+## Database and MCP Toolbox
 
-資料庫相關檔案位於 `db/`。
+Database files are in `db/`:
 
-| 檔案                  | 用途                                          |
-| --------------------- | --------------------------------------------- |
-| `db/schema.sql`       | 產品、推薦規則、FAQ 與向量資料的主要 schema。 |
-| `db/audit_schema.sql` | Audit log schema。                            |
-| `db/seed.sql`         | 本機開發使用的 seed data。                    |
-| `db/tools.local.yaml` | 本機 MCP Toolbox tool definitions。           |
-| `db/tools.cloud.yaml` | 雲端 MCP Toolbox tool definitions。           |
+| File | Purpose |
+|------|---------|
+| `db/schema.sql` | Schema for products, recommendation rules, FAQ, and vectors. |
+| `db/audit_schema.sql` | Audit log schema. |
+| `db/seed.sql` | Local development seed data. |
+| `db/tools.local.yaml` | MCP Toolbox tool definitions for local dev. |
+| `db/tools.cloud.yaml` | Tool definitions for cloud deployment. |
 
-MCP Toolbox 提供的受控工具包含：
+Controlled tools include product search and FAQ search helpers used by the Agent:
 
-- `search_medical_products`
-- `search_accident_products`
-- `search_family_protection_products`
-- `search_income_protection_products`
-- `get_product_detail`
-- `get_recommendation_rules`
-- `search_faq`
+- `get_product_detail`, `get_recommendation_rules`, `search_faq`, and domain-specific search tools.
 
-匯入 FAQ embeddings：
+Ingest FAQ embeddings locally with:
 
 ```bash
 make db-ingest
 ```
 
-## 安全與合規
+## Security and Compliance
 
-專案包含以下安全與合規設計：
+Security features included:
 
-- 使用 JWT 驗證後端 API 存取。
-- 在受保護 endpoint 檢查 user/session ownership。
-- 透過 `app/security/pii.py` 進行 PII redaction。
-- 使用 public state filtering，避免敏感 session data 外洩到前端。
-- 透過 `app/services/audit_log_service.py` 記錄 audit logs。
-- 支援 audit hash chain，讓稽核紀錄具備防竄改檢查能力。
-- 可設定 audit retention 與 hashing salt。
+- JWT authentication for API access.
+- Ownership checks on protected endpoints.
+- PII redaction logic (`app/security/pii.py`).
+- Public-state filtering to avoid leaking sensitive session data to the frontend.
+- Audit logging via `app/services/audit_log_service.py` with optional audit hash chains.
 
-正式環境請務必替換本機範例 secret：
+Important: replace example development secrets before deploying to production. Do not commit `.env` or service account keys.
 
-```text
-JWT_SECRET
-NEXTAUTH_SECRET
-AUDIT_HASH_SALT
-DATABASE_URL
-AUDIT_DB_PATH
-```
+## Testing
 
-不要提交 `.env`、service account key 或任何產生的 secret 檔案。
-
-## 測試
-
-執行完整 Python 測試：
+Run the full Python test suite:
 
 ```bash
 make check
 ```
 
-執行特定測試群組：
+Run specific test groups:
 
 ```bash
 make test-api
@@ -344,50 +280,32 @@ make test-security
 make test-audit
 ```
 
-測試涵蓋 unit、integration、API、security、load 與 eval，主要位於 `tests/`。
+Tests cover unit, integration, API, security, load and evaluation suites under `tests/`.
 
-## 評估
+## Evaluation
 
-ADK evalsets 位於 `tests/eval/evalsets/`。
+ADK evalsets live under `tests/eval/evalsets/`.
 
-執行預設評估：
+Run evaluations:
 
 ```bash
 make eval
-```
-
-執行所有評估：
-
-```bash
 make eval-all
 ```
 
-執行特定評估群組：
+Targeted evals:
 
 ```bash
 make eval-core
-make eval-extended
 make eval-safety
 make eval-session-aware
-make eval-live
 ```
 
-評估範圍包含核心推薦、延伸情境、安全行為、session-aware memory 與 Live mode 互動。
+## Deployment
 
-## 部署
+Deployment manifests and docs are under `deployment/`.
 
-部署相關檔案位於 `deployment/`。
-
-| 路徑                                                 | 用途                                          |
-| ---------------------------------------------------- | --------------------------------------------- |
-| `deployment/docs/`                                   | 部署、CI/CD 與環境文件。                      |
-| `deployment/terraform/bootstrap/`                    | GitHub / Cloud Build 等 bootstrap resources。 |
-| `deployment/terraform/dev/`                          | Dev environment Terraform。                   |
-| `deployment/terraform/staging/`                      | Staging environment Terraform。               |
-| `deployment/terraform/prod/`                         | Production environment Terraform。            |
-| `deployment/terraform/modules/agent_infrastructure/` | 共用 infrastructure module。                  |
-
-常用部署指令：
+Common deployment commands:
 
 ```bash
 make tf-gen-config
@@ -397,189 +315,121 @@ make build-push
 make gcp-deploy ENV_NAME=dev
 ```
 
-部署前，請在 `.env` 設定必要的 GCP 變數：
+Before deploying, ensure the following environment variables are set in your deployment environment:
 
-```text
-GOOGLE_CLOUD_PROJECT
-GOOGLE_CLOUD_LOCATION
-ARTIFACT_REPOSITORY
-ENV_NAME
-GITHUB_OWNER
-GITHUB_REPO_NAME
-```
+- `GOOGLE_CLOUD_PROJECT`, `GOOGLE_CLOUD_LOCATION`, `ARTIFACT_REPOSITORY`, `ENV_NAME`, `GITHUB_OWNER`, `GITHUB_REPO_NAME`.
 
-## 常見問題
+## Troubleshooting / FAQ
 
-### 缺少 `.env`
-
-從範本建立：
+- Missing `.env`:
 
 ```bash
 cp .env.example .env
 ```
 
-### 後端尚未就緒
-
-檢查：
-
-```text
-http://localhost:8080/readyz
-```
-
-如果 readiness check 失敗，確認 PostgreSQL 與 MCP Toolbox 已啟動：
+- Backend readiness failures: check `http://localhost:8080/readyz`. Make sure PostgreSQL and MCP Toolbox are running:
 
 ```bash
 make db-up
 make toolbox-logs
 ```
 
-### 前端連不到後端
+- Frontend cannot reach backend: verify `NEXT_PUBLIC_API_URL`, `FASTAPI_BASE_URL`, and `NEXTAUTH_URL` in `.env`. Local backend URL: `http://localhost:8080`.
 
-檢查以下變數：
-
-```text
-NEXT_PUBLIC_API_URL
-FASTAPI_BASE_URL
-FASTAPI_BASE_URL_DOCKER
-NEXTAUTH_URL
-```
-
-本機瀏覽器通常使用：
-
-```text
-http://localhost:8080
-```
-
-### 登入或驗證失敗
-
-先確認測試使用者已建立：
+- Authentication failures: ensure test users exist and secrets match between frontend and backend:
 
 ```bash
 make db-seed
 ```
 
-也請確認 `JWT_SECRET` 與 `NEXTAUTH_SECRET` 在後端與前端設定一致。
+- FAQ semantic search not returning results: confirm Google credentials and that FAQ embeddings were ingested (`make db-ingest`).
 
-### FAQ 語意搜尋失敗
-
-確認 Google credentials 已設定，並且 FAQ embeddings 已匯入：
-
-```bash
-make db-ingest
-```
-
-### Port 已被占用
-
-預設 port 如下：
+- Ports used by services (defaults):
 
 ```text
-前端：3000
-後端：8080
-Toolbox：5001
-PostgreSQL：5432
+Frontend: 3000
+Backend: 8080
+Toolbox: 5001
+PostgreSQL: 5432
 ```
 
-請停止占用服務，或在 `.env` 中調整對應 port 變數。
+## Documentation Index
 
-## 文件索引
+- Backend architecture: `docs/features/backend-agent-design.md`
+- Frontend design: `docs/features/frontend.md`
+- Live streaming architecture: `docs/features/live-streaming-architecture.md`
+- MCP Toolbox & DB tools: `docs/features/mcp-toolboxs.md`
+- Observability: `docs/features/obs.md`
+- Evaluation: `docs/features/evaluation.md`
+- Testing: `docs/features/testing.md`
+- Deployment docs: `deployment/docs/README.md`
 
-- 後端架構：`docs/features/backend-agent-design.md`
-- 前端設計：`docs/features/frontend.md`
-- 即時串流架構：`docs/features/live-streaming-architecture.md`
-- MCP Toolbox 與資料庫工具：`docs/features/mcp-toolboxs.md`
-- Observability：`docs/features/obs.md`
-- Evaluation：`docs/features/evaluation.md`
-- Testing：`docs/features/testing.md`
-- 部署指南：`deployment/docs/README.md`
-- 開發與部署計畫：`deployment/docs/plan.md`
-- CI/CD 說明：`deployment/docs/cicd.md`
-- Workload Identity Federation 設定：`deployment/docs/wif-setup.md`
+## Contributing
 
-## 貢獻方式
-
-提交變更前，建議先執行：
+Before opening a PR, run the checks and tests:
 
 ```bash
 make check
 make test-security
 make eval
-```
-
-程式品質檢查：
-
-```bash
 make lint
 ```
 
-如果修改 Agent 行為，請同步新增或更新 `tests/eval/evalsets/` 中的 evalset，讓推薦品質與安全行為可以被持續驗證。
+If you modify Agent behavior, update or add corresponding evalsets under `tests/eval/evalsets/` so recommendation quality and safety rules remain validated.
 
-## 授權
+## License
 
-可自由使用、修改與散布程式碼，但若分享完整程式碼請註明出處喔 ^^。
+This project is available for use, modification and redistribution. If you share the repository publicly, please attribute the source.
 
-## 免責聲明
+## Disclaimer
 
-本專案僅用於原型設計、AI 技術展示、學術研究與雲端系統架構示範。所有保險推薦結果、規則、商品條款與保費計算皆為虛構 or 僅供初步參考，**不可直接用於真實金融或保險業務**。實際投保與保險諮詢仍需以保險公司官方商品說明、要保書、健康告知書與保險公司核保結果為準。
+This repository is intended for prototype demonstration, research, and architecture examples only. Recommendation outputs, rules, product descriptions, and premium calculations are fictional or illustrative and must not be used directly for real financial or insurance advice. Actual insurance purchases must rely on official insurer documentation and underwriting results.
 
-## Portfolio demo dashboard
+## Portfolio Demo Dashboard
 
-This repository already includes a production-style **Next.js web application**, so no extra Streamlit/Gradio layer is required. The customer-facing experience is now the default view and is also available through a dedicated dashboard URL.
+The repository contains a production-style Next.js application used as the primary customer-facing demo. A self-contained resume-friendly demo is also included.
 
-### Run the complete demo locally
+Run the full local demo with Docker Compose:
 
 ```bash
 cp .env.example .env
-# Fill in the required Google/Gemini credentials in .env
+# Fill in credentials
 docker compose up --build
 ```
 
-Then open:
+Available endpoints:
 
-- **Customer dashboard:** http://localhost:3000/dashboard
-- **Main web app:** http://localhost:3000
-- **FastAPI health check:** http://localhost:8080/healthz
+- Customer dashboard: http://localhost:3000/dashboard
+- Main web app: http://localhost:3000
+- FastAPI health: http://localhost:8080/healthz
 
-The dashboard reuses the existing recommendation UI and backend pipeline:
-
-```text
-Browser / Next.js dashboard
-          ↓
-       FastAPI
-          ↓
-      Google ADK
-       ↙      ↘
-SQL product   FAQ / RAG
-   tools        search
-       ↘      ↙
-        Gemini
-          ↓
-Recommendation cards + explanation
-```
-
-This keeps the original backend, agent, database, RAG, authentication, Docker and cloud-deployment structure intact while giving the project a clear browser-based portfolio entry point.
-
-For the seeded local Docker demo, you can use the existing development account:
+Local seeded demo credentials (development only):
 
 ```text
 username: testuser
 password: password123
 ```
 
-These credentials are for local/demo use only; replace them before any public deployment.
+## Resume-friendly demo (Gradio)
 
-## Simple resume demo (Gradio)
-
-A standalone portfolio dashboard is available in `portfolio_demo.py`. It intentionally keeps the full Next.js application untouched and provides a one-file browser demo that is easier to host and link from a resume.
+A lightweight one-file demo is available as `portfolio_demo.py`. It is intentionally separate from the Next.js app so it is easy to run and host for a portfolio link.
 
 ```bash
 pip install gradio
 python portfolio_demo.py
 ```
 
-Open `http://localhost:7860`. To have Gradio request a temporary public share URL while the process is running:
+Open `http://localhost:7860`. To create a temporary public share URL while the process runs:
 
 ```bash
 GRADIO_SHARE=true python portfolio_demo.py
 ```
 
-For a stable resume URL, use `portfolio_demo.py` as the app entry point on a Gradio-compatible host. The dashboard itself has no database requirement; the production ADK/FastAPI application remains unchanged elsewhere in this repository.
+---
+
+If you want, I can also:
+
+- Run a quick spell/format check of this README and commit the change.
+- Generate a shorter README for GitHub project landing page.
+
+Updated file: [README.md](README.md)
