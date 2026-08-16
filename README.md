@@ -1,4 +1,4 @@
-# Insurance Recommendation Agent (English README)
+# Insurance Recommendation Agent (README)
 
 > Portfolio adaptation: This fork preserves the original production-style architecture and broadens the insurance demo to include modern, digital-first recommendation flows for home, auto, and pet insurance. It keeps the Google ADK → MCP Toolbox → SQL/RAG → FastAPI design while adding UI and evaluation improvements for a portfolio demo.
 
@@ -24,8 +24,6 @@ Primary goals of this README:
 
 ## System Architecture
 
-![System Architecture](docs/images/archi-v2.png)
-
 ```
 Browser / Next.js
     |
@@ -43,8 +41,6 @@ FastAPI Backend
     v
 PostgreSQL + pgvector (products, rules, FAQ embeddings, sessions, audits)
 ```
-
-![Features Diagram](docs/images/features.png)
 
 ## Technology Stack
 
