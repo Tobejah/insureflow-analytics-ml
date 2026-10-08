@@ -1,7 +1,5 @@
 # Insurance Recommendation Agent (README)
 
-> Portfolio adaptation: This fork preserves the original production-style architecture and broadens the insurance demo to include modern, digital-first recommendation flows for home, auto, and pet insurance. It keeps the Google ADK → MCP Toolbox → SQL/RAG → FastAPI design while adding UI and evaluation improvements for a portfolio demo.
-
 This repository provides a working example of an insurance recommendation AI Agent built on top of Google ADK. The system integrates FastAPI, Next.js, MCP Toolbox (controlled tools), PostgreSQL with pgvector, and Geminic/Vertex AI models. It demonstrates product search, FAQ semantic retrieval, session-aware memory, audit logging, PII protection, and optional multimodal live interactions.
 
 Primary goals of this README:
